@@ -1,6 +1,7 @@
 # YDKJS Summary
 
-# Chapter 1: Types
+## Types and Grammar
+## Chapter 1: Types
 
 - JavaScript has 7 built-in types:
 1. null
@@ -19,7 +20,7 @@
     1. Error messages = `ReferenceError: a is not defined`
     2. Return values of `typeof` which is undefined for both 
 
-# Chapter 2: Values
+## Chapter 2: Values
 - Arrays are simply numerically indexed collections of any type
 - Strings are similar but are immutable (easier to work with arrays)
 - Numbers in JS include both integers and floating-point values
@@ -32,7 +33,7 @@
   - References are not like references/pointers in other languages they are never pointed at other variables/references only at the underlying values
 
 
-# Chapter 3: Natives
+## Chapter 3: Natives
 
 Defining an array with undefined values instead of empty slots:
 ```javascript
@@ -43,9 +44,9 @@ a; // [ undefined, undefined, undefined ]
 - JavaScript provides object wrappers around primitive values, known as natives (String, Number, Boolean etc.)
 - Object wrappers give the values access to behaviors appropriate for each subtype (i.e. `String#trim()` and `Array#concat(..)`)
 
-# Chapter 4: Coercion
+## Chapter 4: Coercion
 
-## Explicit vs Implicit
+### Explicit vs Implicit
 
 ```javascript
 var a = 42;
@@ -131,7 +132,7 @@ a == b; // false
 // 5. false
 ```
 
-Comparing `null` to `undefined`:
+### Comparing `null` to `undefined`:
 Quoting the ES5 spec, clauses 11.9.3.2-3:
  1  If x is null and y is undefined, return true.
  2  If x is undefined and y is null, return true.
@@ -156,7 +157,7 @@ if (a == null) {
 }
 ```
 
-Comparing objects to non-objects:
+### Comparing objects to non-objects:
 The ES5 spec says in clauses 11.9.3.8-9:
  1  If Type(x) is either String or Number and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
  2  If Type(x) is Object and Type(y) is either String or Number, return the result of the comparison ToPrimitive(x) == y.
@@ -169,7 +170,7 @@ var b = [ 42 ];
 a == b; // true
  ```
 
-Comparing Booleans:
+### Comparing Booleans:
 1. If Type(x) is Boolean, return the result of the comparison ToNumber(x) == y.
 2.  If Type(y) is Boolean, return the result of the comparison x == ToNumber(y).
 
@@ -181,7 +182,7 @@ var y = "42";
 x == y; // false, since ToNumber(true) = 1
 ```
 
-Falsy comparisons:
+### Falsy comparisons:
 ```javascript
 "0" == null;            // false
 "0" == undefined;       // false
@@ -227,14 +228,14 @@ Crazy ones:
 // [null] will become ""
 ```
 
-**To effectively avoid issues with such comparisons, here’s some heuristic rules to follow:**
+**To effectively avoid issues with such comparisons, here’s some heuristic rules to follow:**\
  •  If either side of the comparison can have true or false values, don’t ever, EVER use == .
  •  If either side of the comparison can have [] , "" , or 0 values, seriously consider not using == .
 
 The question of == versus === is really appropriately framed as: should you allow coercion for a comparison or not?
 
 
-# Chapter 5: Grammar
+## Chapter 5: Grammar
 
 Expression Side Effects:
 ```javascript
@@ -247,11 +248,11 @@ a;      // 43
 a;      // 44
 ```
 
-## Operator Precedence:
+### Operator Precedence:
 - `&&` has a higher precedence than `==`
 - `&&` is more precedent than `||`
 
-### Short Circuited:
+#### Short Circuited:
 For both `&&` and `||` operators, the right hand operand will not be evaluated if the left hand operand
 is sufficient to determine the outcome of the operation.
 
@@ -322,7 +323,7 @@ Let’s solve it now:
 5.  For the second ? test, "foo" is truthy.
 6.  a is 42 .
 
-# Errors
+### Errors
 Grammar run time errors
 Example:
 
@@ -348,7 +349,7 @@ function bar(a,b,a) { "use strict"; }   // Error!
 })();
 ```
 
-Temporal Dead Zone (TDZ):
+### Temporal Dead Zone (TDZ):
 - A variable reference cannot yet be made, because it hasn't reached its required initialization.
  ```javascript
 {
@@ -366,7 +367,7 @@ Temporal Dead Zone (TDZ):
 }
 ```
 
-## Function arguments:
+### Function arguments:
 
 Outer reference `b` will cause an error. However, `a` is fine since by that time it's past the TDZ for parameter `a`.
 ```javascript
