@@ -321,3 +321,167 @@ Let’s solve it now:
 4. (c || b) is "foo" .
 5.  For the second ? test, "foo" is truthy.
 6.  a is 42 .
+
+# Errors
+Grammar run time errors
+Example:
+
+`var a = /+foo/; // Error - due to invalid regex!`
+
+ES5's `strict` mode defines even more early errors:
+1. Function parameter names cannot be duplicated:
+```javascript
+function foo(a,b,a) { }                 // just fine
+
+function bar(a,b,a) { "use strict"; }   // Error!
+```
+
+2. Having more than one property of the same name
+```javascript
+(function(){
+    "use strict";
+
+    var a = {
+        b: 42,
+        b: 43
+    };          // Error!
+})();
+```
+
+Temporal Dead Zone (TDZ):
+- A variable reference cannot yet be made, because it hasn't reached its required initialization.
+ ```javascript
+{
+    a = 2;      // ReferenceError!
+    let a;
+}
+ ```
+
+ Interestingly, while `typeof` has an exception to be safe for undeclared variables (see Chapter 1 ), no such safety exception is made for TDZ references:
+```javascript
+{
+    typeof a;   // undefined
+    typeof b;   // ReferenceError! (TDZ)
+    let b;
+}
+```
+
+## Function arguments:
+
+Outer reference `b` will cause an error. However, `a` is fine since by that time it's past the TDZ for parameter `a`.
+```javascript
+var b = 3;
+
+function foo( a = 42, b = a + b + 5 ) {
+    // ..
+}
+```
+When using ES6's default parameter values, the default value is applied if uou omit an argument, or you pass an `undefined` value in it's place.
+
+```javascript
+function foo( a = 42, b = a + 1 ) {
+    console.log( a, b );
+}
+
+foo();                  // 42 43
+foo( undefined );       // 42 43
+foo( 5 );               // 5 6
+foo( void 0, 7 );       // 42 7
+foo( null );            // null 1 (since null is coerced to 0)
+```
+
+## try..finally
+- `Finally` clause always runs (no matter what) and always runs right after the `try (and catch` if present)
+```javascript
+function foo() {
+        try {
+                return 42;
+        }
+        finally {
+                console.log( "Hello" );
+        }
+
+        console.log( "never runs" );
+}
+
+console.log( foo() );
+// Hello
+// 42
+```
+- The return 42 runs right away, which sets up the completion value from the foo() call.
+- This action completes the try clause and the finally clause immediately runs next.
+- Only then is the foo() function complete, so that its completion value is returned back for the console.log(..) statement to use.
+
+
+ The exact same behavior is true of a throw inside try :
+ ```javascript
+ function foo() {
+        try {
+                throw 42;
+        }
+        finally {
+                console.log( "Hello" );
+        }
+
+        console.log( "never runs" );
+}
+
+console.log( foo() );
+// Hello
+// Uncaught Exception: 42
+```
+
+If an exception is thrown (accidental or intentionally) inside a `finally` clause, it will override the primary completion of the function.
+
+```javascript
+function foo() {
+        try {
+                return 42;
+        }
+        finally {
+                throw "Oops!";
+        }
+
+        console.log( "never runs" );
+}
+
+console.log( foo() );
+// Uncaught Exception: Oops!
+```
+
+A return inside a finally has the special ability to override a previous return from the try or catch clause, but only if return is explicitly called.
+
+```javascript
+function foo() {
+        try {
+                return 42;
+        }
+        finally {
+                // no `return ..` here, so no override
+        }
+}
+
+function bar() {
+        try {
+                return 42;
+        }
+        finally {
+                // override previous `return 42`
+                return;
+        }
+}
+
+function baz() {
+        try {
+                return 42;
+        }
+        finally {
+                // override previous `return 42`
+                return "Hello";
+        }
+}
+
+foo();   // 42
+bar();   // undefined
+baz();   // Hello
+```
