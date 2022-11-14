@@ -486,3 +486,227 @@ foo();   // 42
 bar();   // undefined
 baz();   // Hello
 ```
+
+## `this` & Object Prototypes
+
+### Chapter 1: `this` or That?
+#### Reviewing what `this` isn't
+`this` is neither a reference to the function itself, nor is it a reference to the function’s lexical scope.
+
+`this` is actually a **binding** that is made when a **function is invoked**, and what it **references** is determined entirely by the **call-site** where the function is called.
+
+### Chapter 2: `this` All Makes Sense Now!
+
+#### Call-Site
+The location in code where a function is called (not where it’s declared).
+
+```javascript
+function baz() {   
+// call-stack is: `baz`    
+// so, our call-site is in the global scope    
+console.log( "baz" );    
+bar(); // <-- call-site for `bar`
+}
+function bar() {   
+// call-stack is: `baz` -> `bar`    
+// so, our call-site is in baz    
+console.log( "bar" );    
+foo(); // <-- call-site for `foo`
+}
+function baz() {   
+// call-stack is: `baz` -> `bar` -`foo`    
+// so, our call-site is in bar    
+console.log( "foo" );    
+baz(); // <-- call-site for `baz`
+}
+```
+
+#### Explicit Binding
+We create a function bar() which, internally, manually calls foo.call(obj),
+thereby forcibly invoking foo with obj binding for this . No matter how you later
+invoke the function bar, it will always manually invoke foo with obj.
+This binding is both explicit and strong, so we call it hard binding.
+
+```javascript
+function foo() {    
+  console.log( this.a );
+}
+var obj = {a: 2};
+var bar = function() { 
+	foo.call( obj );
+};
+bar(); // 2
+setTimeout( bar, 100 ); // 2
+// hard-bound `bar` can no longer have its `this` overridden
+bar.call( window ); // 2
+```
+
+Most typical way to wrap a function with a hard binding:
+```javascript
+function foo(something) {    
+  console.log( this.a, something );
+}
+var obj = {a: 2};
+var bar = function() { 
+	foo.apply( obj, arguments );
+};
+var b = bar(3); // 2 3
+console.log( b); // 5
+```
+Hard binding is provided with a built in utility as of ES5. `Function.prototype.bind`:
+```javascript
+function foo(something) {    
+  console.log( this.a, something );
+}
+var obj = {a: 2};
+var bar = foo.bind(obj);
+var b = bar(3); // 2 3
+console.log( b); // 5
+```
+#### Determining this
+1. Is the function called with new ( **new binding** )? If so, `this` is the newly constructed object.
+`var bar = new foo()`
+2. Is the function called with call or apply ( **explicit binding** ), even hidden inside a bind hard binding ? If so, `this` is the explicitly specified object.
+`var bar = foo.call( obj2 )`
+3. Is the function called with a context ( **implicit binding** ), otherwise known as an owning or containing object? If so, `this` is that context object.
+var bar = obj1.foo()
+4. Otherwise, default the `this` ( **default binding** ). If in strict mode, pick undefined , otherwise pick the global object.
+`var bar = foo()`
+
+
+#### Binding Exceptions
+However, there’s a slight hidden “danger” in always using null when you don’t care about the this binding.
+If you ever use that against a function call (for instance, a third-party library function that you don’t control),
+and that function does make a this reference, the default binding rule means it might inadvertently reference (or worse, mutate!) the global object ( window in the browser).
+Obviously, such a pitfall can lead to a variety of bugs that are very difficult to diagnose and track down.
+
+#### Safer this
+- User `Object.create(null)` similar to `{}` but without the delegation to Object.prototype
+
+```javascript
+function foo(a,b) { 
+        console.log( "a:" + a + ", b:" + b );
+}
+// our DMZ empty object
+var ø = Object.create( null );
+// spreading out array as parameters
+foo.apply( ø, [2, 3] ); // a:2, b:3
+// currying with `bind(..)`
+var bar = foo.bind( ø, 2 );
+bar( 3 ); // a:2, b:3
+```
+
+#### Lexical this
+Arrow functions don't play by the same rules:
+```javascript
+function foo() {    
+	// return an arrow function   
+	return (a) => {        
+		// `this` here is lexically inherited from `foo()`        
+		console.log( this.a );   
+		};
+	}
+	var obj1 = { a: 2};
+	var obj2 = { a: 3};
+	var bar = foo.call( obj1 );
+	bar.call( obj2 ); // 2, not 3!
+```
+The arrow-function created in foo() lexically captures whatever foo() s this is at its call-time.
+The lexical binding of an arrow-function cannot be overridden (even with new !).
+
+### Chapter 3: Objects
+
+#### Syntax
+Literal object:
+
+```javascript
+var myObj = {
+	key: value
+	// ...
+}
+```
+
+Constructed form:
+```javascript
+var myObj = new Object();
+	myObj.key = value;
+```
+
+The only difference really is that you can add **one or more key/value pairs** to the **literal** declaration, whereas with ***constructed-form*** objects, you must add the properties **one by one**.
+
+Extremely uncommon to use the "constructed form".
+
+#### Types
+There are 6 primitive types:\
+string •  number •  boolean •  null •  undefined •  object
+
+#### Built-in Objects
+Object subtypes refereed to as built-in objects.
+- String 
+- Number
+- Boolean
+- Object
+- Function
+- Array
+- Date
+- RegExp
+- Error
+
+Note that, The primitive value "I am a string" is not an object, it’s a primitive literal and immutable value. To perform operations such as checking it's length etc. a String object is required.
+
+Luckily, the language **automatically coerces** a string primitive to a **String object** when necessary, which means you almost never need to explicitly create the Object form.
+
+Same sort of coercion happens for number literal and boolean counterparts.
+
+`null` and `undefined` have no object wrapper form, only their primitive values. By contrast `Date` values can only be created with their constructed object form, as they have no literal form counterparts.
+
+#### Contents
+```javascript
+var myObject = {
+	a: 2;
+};
+myObject.a; //2
+myObject["a"]; //2
+```
+The .a syntax is usually referred to as “property access,” whereas the ["a"] syntax is usually referred to as “key access.”
+
+In objects, property names are always strings. If you use any other value besides a string (primitive) as the property, it will first be converted to a string. 
+
+This even includes numbers, which are commonly used as array indexes, so be careful not to confuse the use of numbers between objects and arrays:
+
+**Computed Property Names**
+ES6 adds computed property names , where you can specify an expression, surrounded by a [ ] pair, in the key-name position of an object-literal declaration:
+
+```javascript
+var prefix = "foo";
+var myObject = {
+	[prefix + "bar"] : "hello",
+	[prefix + "baz"] : "world",
+};
+myObject["foobar"]; // hello
+myObject["foobaz"]; // world
+```
+
+#### Arrays
+
+Arrays are objects, so even though each index is a positive integer, you can also add properties onto the array.
+
+```javascript
+var myArray = ["foo", 42, "bar"];
+myArray.baz = "baz";
+myArray.length; // 3
+myArray.baz; // "baz"
+```
+
+Note that adding a new property did not change the length.
+
+Be careful adding adding a new property where the property name looks like a number, it will end up instead as a numeric index.
+
+```javascript
+var myArray = ["foo", 42, "bar"];
+myArray["3"] = "baz";
+myArray.length; // 4
+myArray[3]; // "baz"
+```
+
+#### Duplicating Objects
