@@ -710,3 +710,183 @@ myArray[3]; // "baz"
 ```
 
 #### Duplicating Objects
+ES6 has now defined  `Object.assign(..)` \
+(takes a target object as it's first parameter and one or more source objects as it's subsequent parameters)
+
+```javascript
+var newObj = Object.assign({}, myObject);
+```
+
+#### Property Descriptors
+As of ES5 all properties are described in terms of a *property descriptor*.
+
+```javascript
+var myObject = {
+	a: 2
+};
+Object.getOwnPropertyDescriptor(myObject, "a")
+/*
+{
+	value: 2,
+	writable: true,
+	enumerable: true,
+	configurable: true
+}
+*/
+```
+
+Use `Object.defineProperty(..)` to add new property if existing one is **configurable**.
+
+```javascript
+var myObject = {};
+Object.defineProperty( myObject, "a", {   
+	value: 2,    
+	writable: true,    
+	configurable: true,   
+	enumerable: true
+});
+myObject.a; // 2
+```
+
+Be careful, changing **configurable** to false is a one-way action, and cannot be undone!
+
+**Writable** can always be changed from true to false without error, but not back to true if already false!
+
+#### Enumeration
+Note: `for..in` loops applied to arrays can give somewhat unexpected results, in that the enumeration of an array will include not only all the numeric indices, but also any enumerable properties.\
+ It’s a good idea to use `for..in` loops only on `objects`, and `traditional for loops with numeric index` iteration for `arrays`.
+
+#### Iteration
+
+ES6 adds a `for..of` loop syntax for iterating over arrays (and objects, if the object defines its own custom iterator):
+```javascript
+var myArray = [1, 2, 3];
+	for(var v of myArray) {
+		console.log(v);
+	}
+	// 1
+	// 2
+	// 3 
+```
+
+### Chapter 4: Mixing (Up) "Class" Objects
+Overview of OOP and how it can be done in JS.
+
+### Chapter 5: Prototypes
+
+#### [[Prototype]]
+Simply a reference to another object.
+
+
+The `[[Prototype]]` chain is consulted, one link at a time, when you perform property lookups in various fashions. The lookup stops once the property is found or the chain ends.
+```javascript
+var anotherObject = {    a: 2};
+// create an object linked to `anotherObject`
+var myObject = Object.create( anotherObject );
+for (var k in myObject) { 
+  console.log("found: " + k);
+}
+// found: a
+("a" in myObject); // true
+```
+
+#### Constructors
+Functions aren't constructors, but function calls are "constructor calls" if and only if `new` is used.
+
+```javascript
+function Foo() {   
+	 // ...
+}
+	 Foo.prototype.constructor === Foo; // true
+	 var a = new Foo();
+	 a.constructor === Foo; // true
+```
+
+**Note** how it seems like `a.constructor === Foo` being true means that a has an actual.constructor property on it, pointing at `Foo`? **Not correct.**\
+This is just unfortunate confusion. In actuality, the .constructor reference is also delegated up to` Foo.prototype`, which happens to, by default, have a `.constructor` that points at `Foo`.
+
+```javascript
+function Foo() { /* .. */ }
+Foo.prototype = { /* .. */ }; // create a new prototype object
+var a1 = new Foo();
+a1.constructor === Foo; // false!
+a1.constructor === Object; // true!
+```
+
+**Takeway**: *"Constructed does not mean constructed by"*
+
+
+### Object Links
+
+
+### Review
+- When attempting a property access on an object that doesn't have that property, the objects internal `[[Prototype]]` linkage defines where the `[[Get]]` operation should look next.
+-This defines the **"prototype chain"**
+- All normal objects have the built in `Object.prototype` as the top of the prototype chain, where property resolution will stop if not found anywhere prior in th chain.
+- `toString()`, `valueOf()`, and several other common utilities exist on this `Object.prototype` object, which explains how all objects in the language are able to access them.
+- Most common way to get two objects linked to each other is using the `new` keyword with a function call, which amongst its four steps creates a new object linked to another object.
+-Functions called with `new` are often called `constructors`, despite the fact that they are not actually instantiating a class as `constructors` do in traditional class-orientated languages.  
+- Key difference between common OOP languages and JS is that in JS noo copies are made. (Rather, objects end up linked to each other via an internal `[[Prototype]]` chain)
+- OOP terms like "inheritance" (and "prototypal inheritance") and all the other OO terms don't make sense for JS>
+- **Delegation** is more appropriate, because these relationships are not copies but delegation links.
+
+
+### Chapter 6: Behavior Delegation
+
+The essence of what's important to the functionality we can leverage in JavaScript, is **all about objects being linked to other objects**.
+
+#### Delegation Theory
+- Define an object
+- This object will have concrete behavior including  utility methods and various tasks
+- For each task, you define an object that holds that task specific data/behavior.
+```javascript
+Task = {    
+	setID: function(ID) { this.id = ID; },
+	outputID: function() { console.log( this.id ); }
+};
+// make `XYZ` delegate to `Task`
+XYZ = Object.create( Task );
+XYZ.prepareTask = function(ID,Label) {
+	this.setID( ID );
+	this.label = Label;
+};
+XYZ.outputTaskDetails = function() {    
+	this.outputID();    
+	console.log( this.label );
+};
+```
+
+Some other differences to note with OLOO-style code: (**Objects Linked to Other Objects**
+ 1.  Both the id and label data members from the previous class example are data properties directly on XYZ (neither is on Task ). In general, with [[Prototype]] delegation, you want state to be on the delegators ( XYZ, ABC ), not on the delegate ( Task).
+ 2.  With the class design pattern, we intentionally named outputTask the same on both parent ( Task) and child ( XYZ), so that we could take advantage of overriding (polymorphism). In behavior delegation, we do the opposite: we avoid if at all possible naming.
+ 3. this.setID(ID); inside of a method on the XYZ object first looks on XYZ for setID(..) , but since it doesn’t find a method of that name on XYZ , [[Prototype]] delegation means it can follow the link to Task to look for setID(..) , which it of course finds.
+ Moreover, because of implicit call-site this binding rules, when setID(..) runs, even though the method was found on Task , the this binding for that function call is XYZ , exactly as we’d expect and want.
+
+ #### Classes Versus Objects
+
+ Introspection:\
+ (By its syntax, `instanceof` pretends to be inspecting the relationship between `a1` and `Foo` , but it’s actually telling us whether `a1` and (the arbitrary object referenced by) `Foo.prototype` are related.
+)
+```javascript
+function Foo () {
+	// ...
+}
+Foo.prototype.something = function ()  {
+	// ...
+}
+var a1 = new Foo();
+// later
+if ( a1 instanceof Foo){
+	a1.something();
+}
+
+```
+
+### Review
+- JS's `[[Prototype]]` mechanism is a behavior delegation mechanism.
+- Coding with objects in JS, simplifies syntax and lead's to simpler code architecture design.
+- OLOO (objects linked to other objects) is a code style that creates and relates objects directly without the abstraction of classes.
+- OLOO naturally implements `[[Prototype]]`-based behavior delegation.
+
+Appendix A. ES6 Class
+- `class` hides many problems and introduces other subtle but dangerous ones
