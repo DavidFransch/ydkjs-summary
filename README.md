@@ -108,9 +108,9 @@ c && b; // null
 ```
 
 `ToNumber` coercion:
-In the ES5 spec, clauses 11.9.3.4-5 say:
- 1  If Type(x) is Number and Type(y) is String, return the result of the comparison x == ToNumber(y).
- 2  If Type(x) is String and Type(y) is Number, return the result of the comparison ToNumber(x) == y.
+In the ES5 spec, clauses 11.9.3.4-5 say:\
+ 1.  If Type(x) is Number and Type(y) is String, return the result of the comparison x == ToNumber(y).
+ 2.  If Type(x) is String and Type(y) is Number, return the result of the comparison ToNumber(x) == y.
 
 ```javascript
 var a = 42;
@@ -134,8 +134,8 @@ a == b; // false
 
 ### Comparing `null` to `undefined`:
 Quoting the ES5 spec, clauses 11.9.3.2-3:
- 1  If x is null and y is undefined, return true.
- 2  If x is undefined and y is null, return true.
+ 1.  If x is null and y is undefined, return true.
+ 2.  If x is undefined and y is null, return true.
 
 Instead of:
 
@@ -159,8 +159,8 @@ if (a == null) {
 
 ### Comparing objects to non-objects:
 The ES5 spec says in clauses 11.9.3.8-9:
- 1  If Type(x) is either String or Number and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
- 2  If Type(x) is Object and Type(y) is either String or Number, return the result of the comparison ToPrimitive(x) == y.
+ 1. If Type(x) is either String or Number and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
+ 2. If Type(x) is Object and Type(y) is either String or Number, return the result of the comparison ToPrimitive(x) == y.
 
 
  ```javascript
@@ -172,7 +172,7 @@ a == b; // true
 
 ### Comparing Booleans:
 1. If Type(x) is Boolean, return the result of the comparison ToNumber(x) == y.
-2.  If Type(y) is Boolean, return the result of the comparison x == ToNumber(y).
+2. If Type(y) is Boolean, return the result of the comparison x == ToNumber(y).
 
 
 ```javascript
@@ -229,10 +229,10 @@ Crazy ones:
 ```
 
 **To effectively avoid issues with such comparisons, here’s some heuristic rules to follow:**\
- •  If either side of the comparison can have true or false values, don’t ever, EVER use == .
- •  If either side of the comparison can have [] , "" , or 0 values, seriously consider not using == .
+ •  If either side of the comparison can have true or false values, don’t ever, EVER use `==` .
+ •  If either side of the comparison can have `[]` , `""` , or `0` values, seriously consider not using `==`.
 
-The question of == versus === is really appropriately framed as: should you allow coercion for a comparison or not?
+The question of `==` versus `===` is really appropriately framed as: **should you allow coercion for a comparison or not**?
 
 
 ## Chapter 5: Grammar
@@ -287,7 +287,7 @@ Because:
 
 
 ### Associativity:
-- `&&` and  `||` are left-associative. (refers to grouping not evaluation)
+- `&&` and  `||` are left-associative. (**refers to grouping not evaluation**)
 
 - `? :` is right-associative.
 - Consider:
@@ -377,7 +377,7 @@ function foo( a = 42, b = a + b + 5 ) {
     // ..
 }
 ```
-When using ES6's default parameter values, the default value is applied if uou omit an argument, or you pass an `undefined` value in it's place.
+When using ES6's default parameter values, the default value is applied if you omit an argument, or you pass an `undefined` value in it's place.
 
 ```javascript
 function foo( a = 42, b = a + 1 ) {
